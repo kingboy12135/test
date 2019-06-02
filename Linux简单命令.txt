@@ -1,0 +1,382 @@
+一，防止息屏
+	有时候linux系统是没有图形化界面的，为了关闭锁屏和息屏可以用如下命令
+	关闭息屏，最后0是代表关闭锁屏，将0替换为60代表60s后自动息屏，以此类推。
+gsettings set org.gnome.desktop.session idle-delay 0
+  关闭锁屏：
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+
+=============================================================================================================================================
+
+二，解压异常
+	先查看文件的大小看看是否是文件移动的过程中导致的文件丢失问题：
+gzip: stdin: unexpected end of file
+tar: 归档文件中异常的 EOF
+tar: 归档文件中异常的 EOF
+tar: Error is not recoverable: exiting now
+?
+[root@localhost jdk1.8]# ls -lht jdk-8u161-linux-x64.tar.gz
+-rw-r--r--. 1 root root 420K 10月 25 14:41 jdk-8u161-linux-x64.tar.gz
+[root@localhost jdk1.8]#?
+[root@localhost jdk1.8]#?
+[root@localhost jdk1.8]#?
+[root@localhost jdk1.8]#?
+[root@localhost jdk1.8]#?
+[root@localhost jdk1.8]# ls -lht jdk-8u161-linux-x64.tar.gz
+-rwxrw-rw-. 1 root root 181M 10月 25 10:58 jdk-8u161-linux-x64.tar.gz
+?
+==========================================================================================================
+
+三，打包和解压
+tar -zcvf vim.tar.gz .vim*
+tar -zxvf vim.tar.gz (-C path)
+
+==========================================================================================================
+
+四，网络配置
+	虚拟机：配置（桥接连接）
+	=======================================================================================================
+	命名配置：当前开机下可以用（重新开机要重新配置）
+ifconfig:配置网络（查看网络）
+sudo dhclient：向路由器索要ip，自动分配一个可用的（自动，路由器知道空闲IP地址）
+	临时配置网络的命令：（配置固定IP地址）
+sudo ifconfig eth0 192.168.1.127 netmask 255.255.255.0  
+route gw 192.168.1.1（配置网关）
+
+	=======================================================================================================
+	静态IP地址：改配置文件
+sudo vim /etc/network/interfaces
+	配置内容：
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.168.1.249
+gatewayip 192.168.1.1
+netmask 255.255.255.0
+
+	重启网卡：
+sudo /etc/init.d/networking restart
+sudo vim /etc/resolv.conf
+	该文件中设置域名：
+nameserver 114.114.114.114
+nameserver 8.8.8.8
+nameserver 192.168.1.1
+
+	=======================================================================================================
+	注意：三中方式选一
+	虚拟机：虚拟网络编辑器（所有系统关掉）
+nslookup：查看域名ip地址
+ping：检查网络状态  ping 114.114.114.114
+	=======================================================================================================
+
+=======================================================================================================================
+
+五，ubuntu18.04挂载文件夹
+2、如果没有安装VMware Tools，先安装VMware Tools
+3、安装open-vm-tools
+       sudo apt-get install open-vm-tools
+4、挂载共享文件夹，-o allow_other 允许其他用户访问，即普通用户也可以访问，解决只用root用户才可以访问的问题。
+	sudo vmhgfs-fuse ./host:/  /mnt/hgfs/  -o allow_other 
+	如果提示下列问题
+	/*
+	fuse: mountpoint is not empty
+	fuse: if you are sure this is safe, use the ‘nonempty’ mount option
+	则添加参数 -o nonempty
+	*/
+	sudo vmhgfs-fuse ./host:/  /mnt/hgfs/  -o allow_other  -o nonempty
+	不过每次关机重启后都需要挂载一次
+	解决这个问题可以通过修改/etc/fstab来让系统启动时自动挂载
+	打来文件
+	sudo  vi /etc/fstab
+	在末行另起一行插入
+.host:/        /mnt/hgfs      fuse.vmhgfs-fuse   allow_other      0      0
+	保存后mount -a 测试一下。以防配置出错无法开机
+	sudo mount -a
+//安装MAN查看
+	sudo apt-get install manpages-dev manpages-posix-dev
+	vim .vimrc
+在句末加上
+	：source $VIMRUNTIME/ftplugin/man.vim
+
+=============================================================================================================================
+
+六，查看系统空间
+fdisk -l //看sda1
+df -l
+df -h
+ls -hl //查看文件夹
+使用命令”df -l和df -h“具体查看分区使用状况。实际这两个命令具有一样的作用区别是显示的容量单位不一样，
+当然也可以直接使用明”df -lh“。这样我们可以直观的看到当前系统分区（包括交换分区swap）的”文件系统、容量、已用 、可用、已用% 、挂载点“等实时装况。
+参数-h 表示Human-Readable，使用GB,MB等易读的格式方式显示
+
+===========================================================================================================================================================
+
+七，配置Alios-Tings
+	配置环境
+	您可以尝试一键安装脚本Setup Script for Linux/Mac, 或者按以下命令手动安装依赖的软件包 例：在一台 Ubuntu 16.04 LTS (Xenial Xerus) 64-bit PC 上
+sudo apt-get install -y python
+sudo apt-get install -y gcc-multilib
+sudo apt-get install -y libssl-dev libssl-dev:i386
+sudo apt-get install -y libncurses5-dev libncurses5-dev:i386
+sudo apt-get install -y libreadline-dev libreadline-dev:i386
+sudo apt-get install -y python-pip
+sudo apt-get install -y minicom
+	安装 aos-cube
+	首先, 用 python 包管理器 pip 来安装 aos-cube 和相关的依赖包在全局环境，以便于后续使用 AliOS Things Studio 进行开发。
+$ pip install setuptools
+$ pip install wheel
+$ pip install aos-cube
+	请确认pip环境是基于 Python 2.7 的。如果遇到权限问题，可能需要 sudo 来执行。
+	下载代码
+git clone https://github.com/alibaba/AliOS-Things.git
+	编译运行
+AliOS Things 2.1及其后续版本(需要aos-cube 0.3.x)，更多配置参见这里
+cd AliOS-Things
+aos make helloworld@linuxhost -c config && aos make
+./out/helloworld@linuxhost/binary/helloworld@linuxhost.elf
+	但是如果显示找不到命令
+	那是因为没有把路径添加到 ：PATH环境变量下，即为：/home/alios/.local/bin/
+	解决方法：
+1.使用find?命令找到aos的路径：find ~/.local -name aos
+2.打开终端并输入：sudo?vim? ~/.bashrc
+	注意：输入用户密码。这时输入的密码是不可见的。
+3.前面的步骤会打开.bashrc文件，在其末尾添加：
+	ALIOS=/home/alios/.local/bin/? ? ?#这里注意可能你的电脑和我的路径不是一样的
+	export PATH=$PATH:$
+4.使其立即生效，在终端执行：source ~/.bashrc
+	或者重启电脑即可。
+5.保存退出之后打印环境变量看一下：
+	命令：echo $PATH
+	再终端中输入命令 “aos” 看一下：
+	使用命令查看aos-的版本：aos --version
+	//使用命令安装git工具：
+	sudo apt-get install git
+从git拉取Alios-Things源码，这个是国内的仓库快一点
+	git clone https://gitee.com/alios-things/AliOS-Things.git
+
+========================================================================================================================================================
+
+八，安装搜狗输入法
+sudo apt-get install fcitx-config-gtk
+sudo apt-get install fcitx-table-all
+	在一般不能直接安装的情况下可以执行
+sudo apt-get install --fix-broken
+sudo apt-get update
+sudo dpkg -i sogoupinyin_2.2.0.0108_i386.deb
+
+=========================================================================================================================================================
+
+九，安装deepin wine QQ
+第1步，安装deepin-wine环境:
+	git clone https://github.com/wszqkzqk/deepin-wine-ubuntu
+第2步，安装相关应用容器：
+	在http://mirrors.aliyun.com/deepin/pool/non-free/d/中下载想要的容器，点击deb安装即可。以下为推荐容器，任选其一即可:
+TIM：http://mirrors.aliyun.com/deepin/pool/non-free/d/deepin.com.qq.office/
+QQ：http://mirrors.aliyun.com/deepin/pool/non-free/d/deepin.com.qq.im/
+QQ轻聊版：http://mirrors.aliyun.com/deepin/pool/non-free/d/deepin.com.qq.im.light/
+
+=========================================================================================================================================================
+
+十，配置arm-none-linux-gcc
+1，开发板配置文件
+	setenv serverip 192.168.1.249
+	setenv ipaddr 192.168.1.5
+	setenv bootcmd tftp 41000000 uImage\;tftp 42000000 exynos4412-fs4412.dtb\;bootm 41000000 - 42000000
+	setenv bootargs root=/dev/nfs nfsroot=192.168.1.249:/home/fs/source/rootfs rw console=ttySAC2,115200 init=/linuxrc ip=192.168.1.5
+	saveenv
+
+2，交叉工具链的安装
+	1、如果要自己编译工具链，从以下链接下载源码
+	crosstools-ng下载地址
+http://ymorin.is-a-geek.org/download/crosstool-ng/
+	同时对每一个版本都有相应的补丁我们尽量把这些补丁打上，这些补丁的下载地址是
+http://ymorin.is-a-geek.org/download/crosstool-ng/01-fixes/
+
+	2、解压工具链压缩包
+$  cd  ~
+$ mkdir toolchain
+$ cd toolchain	
+将第一天/工具/gcc-4.6.4.tar.xz拷贝到toolchain目录下并解压
+$ tar  xvf  gcc-4.6.4.tar.xz
+
+	3、环境变量的添加
+	修改文件/etc/bash.bashrc添加如下内容
+export PATH=$PATH:/home/linux/toolchain/gcc-4.6.4/bin
+重启配置文件
+$ source  /etc/bash.bashrc
+
+	4、工具链的测试
+$ arm-none-linux-gnueabi-gcc–v
+Using built-in specs.
+COLLECT_GCC=arm-none-linux-gnueabi-gcc
+COLLECT_LTO_WRAPPER=/home/david/Exynos4412/toolchain/gcc-4.6.4/bin/../libexec/gcc/arm-arm1176jzfssf-linux-gnueabi/4.6.4/lto-wrapper
+Target: arm-arm1176jzfssf-linux-gnueabi
+Configured with: /work/builddir/src/gcc-4.6.4/configure --build=i686-build_pc-linux-gnu --host=i686-build_pc-linux-gnu --target=arm-arm1176jzfssf-linux-gnueabi --prefix=/opt/TuxamitoSoftToolchains/arm-arm1176jzfssf-linux-gnueabi/gcc-4.6.4 --with-sysroot=/opt/TuxamitoSoftToolchains/arm-arm1176jzfssf-linux-gnueabi/gcc-4.6.4/arm-arm1176jzfssf-linux-gnueabi/sysroot --enable-languages=c,c++ --with-arch=armv6zk --with-cpu=arm1176jzf-s --with-tune=arm1176jzf-s --with-fpu=vfp --with-float=softfp --with-pkgversion='crosstool-NG hg+default-2685dfa9de14 - tc0002' --disable-sjlj-exceptions --enable-__cxa_atexit --disable-libmudflap --disable-libgomp --disable-libssp --disable-libquadmath --disable-libquadmath-support --with-gmp=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-mpfr=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-mpc=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-ppl=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-cloog=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-libelf=/work/builddir/arm-arm1176jzfssf-linux-gnueabi/buildtools --with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' --enable-threads=posix --enable-target-optspace --without-long-double-128 --disable-nls --disable-multilib --with-local-prefix=/opt/TuxamitoSoftToolchains/arm-arm1176jzfssf-linux-gnueabi/gcc-4.6.4/arm-arm1176jzfssf-linux-gnueabi/sysroot --enable-c99 --enable-long-long
+Thread model: posix
+gcc version 4.6.4 (crosstool-NG hg+default-2685dfa9de14 - tc0002)
+	这样我们的交叉工具链就安装好了
+
+source/rootfs
+	配置文件：/etc/export
+	加:/source/rootfs *(rw,sync,no_subtree_check,no_root_squash)
+sudo apt-get install nfs-kernel-server 
+	//搭建的步骤：
+	tftp服务器最简单安装配置
+sudo mkdir /tftpboot 建立下载目录
+sudo cp uImage exynos4412-fs4412.dtb /tftpboot copy镜像到下载目录
+	1.安装tftp-server
+sudo apt-get install tftpd-hpa
+sudo apt-get install tftp-hpa（如果不需要客户端可以不安装）
+
+tftp-hpa是客户端
+tftpd-hpa是服务器端
+	2.配置TFTP服务器
+sudo vim /etc/default/tftpd-hpa
+将原来的内容改为:
+TFTP_USERNAME="tftp"
+TFTP_ADDRESS="0.0.0.0:69"
+TFTP_DIRECTORY="/tftpboot" #服务器目录,需要设置权限为777,chomd 777
+TFTP_OPTIONS="-l -c -s"
+	3.重新启动TFTP服务
+sudo service tftpd-hpa restart
+	4.tftp测试
+cd ~
+tftp localhost
+tftp> get uImage
+tftp> q
+	成功会在当前目录中发现uImage
+	nfs服务器配置
+	1解压文件系统
+sudo mkdir /source
+sudo cp rootfs.tar.xz /source/
+cd /source
+sudo tar xvf rootfs.tar.xz
+	得到rootfs的目录 /source/rootfs
+2安装 sudo apt-get install nfs-kernel-server 
+3配置
+sudo vi /etc/exports
+	添加如下内容
+/source/rootfs *(rw,sync,no_subtree_check,no_root_squash)
+5 重启 NFS服务
+sudo /etc/init.d/nfs-kernel-server restart
+本机挂载
+mkdir nfstest
+cd nfstest
+cd ~
+sudo mount -t nfs 127.0.0.1: home/fs/source/rootfs home/fs/nfstest
+cd nfstest
+重启 NFS服务
+sudo /etc/init.d/nfs-kernel-server restart
+
+//交叉编译工具安装过程
+
+1.解压
+tar xvf gcc-4.6.4.tar.xz 
+2.环境变量添加
+sudo vi /etc/bash.bashrc 
+最后一行加入
+PATH=$PATH:/home/fs/gcc-4.6.4/bin/ （完整的gcc工具的路径）
+:wq
+3.重启配置文件，加环境变量到系统中
+source /etc/bash.bashrc
+4.测试
+arm-none-linux-gnueabi-gcc -v
+
+=====================================================================================================================================================
+
+十一，修改rm命令
+	方法一：重命名法 将rm命令重命名为del
+		打开~/.bashrc输入
+alias del='mv -t ~/.local/share/Trash/files --backup=t'
+	重行执行
+source .bashrc 
+del + file 
+
+	方法二：重行定义回收站（该方法不太实用，有bug因为在.trash文件夹中文件无法删除）
+防止将 rm -rf ./* 写出 rm -rf /*
+	具体操作如下： 
+	一. 在用户目录新建.trash回收站：
+mkdir ~/.trash
+	二. 在.bashrc末尾中添加如下配置：
+# 修改rm
+alias rm=trash
+alias r=trash
+alias rl='ls ~/.trash/'
+alias ur=recoverfile
+
+recoverfile()
+{
+    mv -i ~/.trash/$@ ./
+}
+
+trash()
+{
+    mv $@ ~/.trash
+}
+	修改完毕后，使用source .bashrc更新下，然后你就可以使用如下命令了：
+rm: 删除文件到回收站
+rl: 查看回收站内容
+ur: 恢复文件到当前目录
+
+==========================================================================================================
+
+十二，清空回收站
+sudo rm -rf ~/.local/share/Trash/*  //清空回收站所有（此命令看清楚再用）
+sudo rm -rf ~/.local/share/Trash/file/*  //清空所有文件
+sudo rm -rf ~/.local/share/Trash/expunged/*
+sudo rm -rf ~/.local/share/Trash/info/*
+
+===================================================================================================
+十三，安装wine4.0
+	第一步：wine是基于32位架构的，现在计算机基本上都是64位，因此需要启用32位架构，
+		如果计算机是32位的则忽略此步。
+sudo dpkg --add-architecture i386
+	第二步：添加软件源。
+wget -nc https://dl.winehq.org/wine-builds/Release.key
+sudo apt-key add Release.key
+sudo apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/
+sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'
+	第三步：更新软件包。
+sudo apt-get update
+	第四步：选择一个wine发行包安装。
+     版本                 安装命令
+Stable branch           sudo apt-get install –install-recommends winehq-stable
+Development branch      sudo apt-get install –install-recommends winehq-devel
+Staging branch          sudo apt-get install –install-recommends winehq-staging
+		检查wine是否安装好可以执行：
+wine --version     #如果出现wine的版本则说明安装成功
+
+	问题：我在执行了apt-get update之后出现了一个错误，如下：
+获取:1 http://dl.winehq.org/wine-builds/ubuntu xenial InRelease [6,242 B]
+错误:1 http://dl.winehq.org/wine-builds/ubuntu xenial InRelease
+由于没有公钥，无法验证下列签名： NO_PUBKEY 76F1A20FF987672F
+命中:2 http://archive.ubuntukylin.com:10006/ubuntukylin xenial InRelease
+获取:3 https://dl.winehq.org/wine-builds/ubuntu bionic InRelease [6,242 B]
+错误:3 https://dl.winehq.org/wine-builds/ubuntu bionic InRelease
+由于没有公钥，无法验证下列签名： NO_PUBKEY 76F1A20FF987672F
+	看了别人的博客后应该是缺少了一个公钥，可以执行下面的命令，然后重新apt-get update就行了。
+sudo apt-key adv --recv-keys --keyserver keyserver.Ubuntu.com F987672F
+
+===================================================================================================
+
+十四，ubuntu18.04把左边的dock面板放到底部或者右边
+	1,首先需要安装gnome的配置工具。
+sudo apt-get install    gnome-tweak-tool 
+	2,安装需要的扩展工具。
+sudo apt-get install  gnome-shell-extension-dashtodock
+	3,在终端打开gnome-tweak-tool工具。接着选择重新启动一次ubuntu。
+gnome-tweaks
+	4,在窗口中选择 扩展，打开里面第一个dashtodock，点选按钮旁边的 配置。
+	5,在位置和大小中，屏幕中的位置 选择 底部。
+	6,接着顶部切换到 启动器，勾选底部的 将应用程序按钮移至dock的起始位置，
+	  这样我们的dock面板就可以在底部使用了，应用菜单按钮也在左边。
+
+===================================================================================================
+
+十五，Ubuntu打开pdf
+evince file.pdf
+
+===========================================
+
+十六，halt -p 关机
